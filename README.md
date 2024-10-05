@@ -1,101 +1,74 @@
 ---
-# Jenkins Backup Pipeline and Shell Script
 
-This project automates the process of backing up a Jenkins instance and uploading the backup to an AWS S3 bucket. The Jenkins pipeline uses a shell script to perform the backup operation.
-
-## Author
-**Akash Nawin**
+# Jenkins Backup Automation
 
 ## Overview
 
-The Jenkins pipeline (`Jenkinsfile`) triggers a backup of the Jenkins home directory (`/var/lib/jenkins`) and uploads the archive to an S3 bucket. The backup includes jobs, plugins, users, secrets, nodes, and essential configuration files.
+This project automates the process of backing up a Jenkins server's critical configuration files, jobs, plugins, users, and secrets. It provides a shell script that archives these important files and securely uploads them to an Amazon S3 bucket. This automation ensures that Jenkins backups are performed consistently and can be easily restored in case of data loss.
 
-## Components
+## Features
 
-### 1. **Jenkinsfile**
+- **Automated Backup:** The script automatically archives Jenkins home directories, jobs, plugins, users, and other essential data.
+- **S3 Upload:** The backup file is uploaded to a pre-configured Amazon S3 bucket for secure storage.
+- **Logging:** Detailed logs are generated for each backup operation, providing traceability and troubleshooting information.
+- **Jenkins Pipeline Integration:** The script can be run manually or integrated with a Jenkins Pipeline for automated backups.
 
-- **Environment Variables:**
-  - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are stored as secret text credentials in Jenkins.
-  
-- **Pipeline Stages:**
-  - **Run Backup Script:** Executes a shell script (`jenkins_backup.sh`) that performs the backup and uploads it to an S3 bucket.
+## How It Works
 
-### 2. **Shell Script (`jenkins_backup.sh`)**
+1. **Jenkins Pipeline**:
+   A Jenkinsfile triggers the backup process through a shell script, passing AWS credentials and the Jenkins home directory as parameters.
 
-- **Backup Process:**
-  1. Verifies root privileges.
-  2. Backs up the Jenkins home directory (`/var/lib/jenkins`).
-  3. Archives the selected directories and files (jobs, plugins, users, secrets, nodes).
-  4. Uploads the backup tarball to an AWS S3 bucket.
-  
-- **S3 Bucket:**
-  - Ensure the script has the appropriate IAM role or access rights to upload the backup to the S3 bucket (`pipeline-jenkins-backup-shell`).
+2. **Backup Script**:
+   The script checks for root privileges, archives the Jenkins home directory, and uploads the generated `.tar.gz` file to a specified S3 bucket. The backup process includes Jenkins jobs, plugins, users, secrets, and nodes.
 
-## Usage
-
-### 1. **Jenkins Pipeline Setup:**
-
-- **Credentials:**
-  - Add AWS credentials in Jenkins as "Secret Text" under the IDs: 
-    - `AWS_ACCESS_KEY_ID`
-    - `AWS_SECRET_ACCESS_KEY`
-
-- **Jenkinsfile:**
-  - Ensure the `Jenkinsfile` is placed in the appropriate repository or project.
-
-### 2. **Shell Script Usage:**
-
-- **Running Manually:**
-
-```bash
-sudo ./jenkins_backup.sh /var/lib/jenkins <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY>
-```
-
-- **Backup Files:**
-  - The backup will be stored temporarily in `/tmp/jenkins-archive-<timestamp>.tar.gz`.
-  
-- **Log File:**
-  - The backup process logs messages in `/var/log/jenkins_backup.log`.
+3. **Logging**:
+   Backup operations are logged in `/var/log/jenkins_backup.log`, helping track the process and identify any issues.
 
 ## Prerequisites
 
-1. **AWS CLI:**
-   - Ensure the AWS CLI is installed and configured on the Jenkins server or machine where the script runs.
-   
-   To install AWS CLI:
-   ```bash
-   sudo apt-get install awscli
-   ```
+- **Jenkins Server**: Ensure you have a Jenkins server with necessary permissions to execute scripts.
+- **AWS Credentials**: AWS credentials (`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`) must be stored as Jenkins credentials for the script to access the S3 bucket.
+- **S3 Bucket**: Set up an S3 bucket for storing the backup archives.
 
-2. **Permissions:**
-   - Ensure the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` have the necessary permissions to upload files to the S3 bucket.
+## Setup Instructions
 
-## Script Details
+### 1. Configure AWS Credentials in Jenkins
+- Go to **Jenkins Dashboard > Manage Jenkins > Manage Credentials**.
+- Add your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as secret text credentials.
 
-### Variables:
+### 2. Add Jenkins Pipeline
+- Create or update your Jenkins Pipeline with the provided `Jenkinsfile`. This file will trigger the backup script and handle environment variables securely.
 
-- **`JENKINS_HOME`**: Path to Jenkins home directory (`/var/lib/jenkins`).
-- **`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`**: AWS credentials for S3 access.
-- **`DEST_FILE`**: Destination file for the tar archive (`/tmp/jenkins-archive.tar.gz`).
-- **`TMP_DIR`**: Temporary directory for creating the backup archive.
-- **`LOG_FILE`**: Location of the log file for backup operations (`/var/log/jenkins_backup.log`).
+### 3. Backup Script
+- The `jenkins_backup.sh` script is responsible for performing the backup. It takes the Jenkins home directory and AWS credentials as inputs, creating a timestamped backup archive and uploading it to the S3 bucket.
 
-### Functions:
+### 4. Schedule Automated Backups
+- You can schedule the Jenkins Pipeline to run at regular intervals to automate backups (e.g., daily or weekly backups).
 
-- **`log_message`**: Writes log messages to the specified log file.
-- **`copyto_s3`**: Uploads the backup archive to an AWS S3 bucket.
-- **`backup_jobs`**: Recursively backs up Jenkins jobs.
-- **`main`**: Manages the overall backup process and triggers functions.
+## Usage
 
-## Example
-
-To run the Jenkins pipeline:
-
-1. **Configure AWS Credentials** in Jenkins.
-2. **Run the pipeline**, which triggers the shell script and backs up Jenkins data.
+### Running the Backup Manually
+To manually trigger the backup process, run the following command on your Jenkins server:
 
 ```bash
-sudo ./jenkins_backup.sh /var/lib/jenkins <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY>
+sudo ./jenkins_backup.sh /path/to/jenkins_home AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
 ```
+
+### Pipeline Triggered Backup
+When the Jenkins Pipeline is executed, the backup script will be automatically triggered, and the archive will be created and uploaded to the specified S3 bucket.
+
+## Logging
+
+Backup events and errors are logged in `/var/log/jenkins_backup.log`. This log file provides detailed information about the operations, helping with monitoring and troubleshooting.
+
+## Future Enhancements
+
+- **Email Notifications**: Add support for email alerts on successful or failed backups.
+- **Retention Policy**: Implement an S3 lifecycle policy to automatically delete old backups after a specified period.
+- **Error Handling**: Improve error handling to capture and report all potential failure points.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
