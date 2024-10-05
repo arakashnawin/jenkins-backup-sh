@@ -1,4 +1,4 @@
-
+---
 # Jenkins Backup Pipeline and Shell Script
 
 This project automates the process of backing up a Jenkins instance and uploading the backup to an AWS S3 bucket. The Jenkins pipeline uses a shell script to perform the backup operation.
@@ -98,6 +98,4 @@ To run the Jenkins pipeline:
 sudo ./jenkins_backup.sh /var/lib/jenkins <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY>
 ```
 
-## License
-
-This script and pipeline are distributed under the MIT License.
+---
